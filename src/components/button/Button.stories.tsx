@@ -35,3 +35,5 @@ export const Sizes: ComponentStory<typeof Button> = () => (
     <Button variant="contained" size="large" label="Large" />
   </Stack>
 );
+
+export const Default = Template.bind({});

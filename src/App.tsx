@@ -1,16 +1,12 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import './App.css';
+import SearchBook from './SearchBook';
 
 function App() {
 
-  const [data, setData] = useState("");
-
-  useEffect(() => {
-    fetch("http://")
-  })
   return (
     <div className="App">
-      hello
+      <SearchBook />
     </div>
   );
 }
