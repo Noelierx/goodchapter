@@ -1,9 +1,8 @@
-import React from 'react';
-import './App.css';
-import SearchBook from './SearchBook';
+import React from "react";
+import "./App.css";
+import SearchBook from "./SearchBook";
 
 function App() {
-
   return (
     <div className="App">
       <SearchBook />

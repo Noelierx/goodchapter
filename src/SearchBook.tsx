@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 interface Book {
@@ -10,10 +10,25 @@ interface Book {
 const SearchBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<Book[]>([]);
-  const [reading, setReading] = useState<Book[]>([]);
-  const [wantToRead, setWantToRead] = useState<Book[]>([]);
-  const [read, setRead] = useState<Book[]>([]);
-  const [didNotFinish, setDidNotFinish] = useState<Book[]>([]);
+  const [reading, setReading] = useState(
+    JSON.parse(localStorage.getItem("reading") || "[]")
+  );
+  const [wantToRead, setWantToRead] = useState(
+    JSON.parse(localStorage.getItem("wantToRead") || "[]")
+  );
+  const [read, setRead] = useState(
+    JSON.parse(localStorage.getItem("read") || "[]")
+  );
+  const [didNotFinish, setDidNotFinish] = useState(
+    JSON.parse(localStorage.getItem("didNotFinish") || "[]")
+  );
+
+  useEffect(() => {
+    localStorage.setItem("reading", JSON.stringify(reading));
+    localStorage.setItem("wantToRead", JSON.stringify(wantToRead));
+    localStorage.setItem("read", JSON.stringify(read));
+    localStorage.setItem("didNotFinish", JSON.stringify(didNotFinish));
+  }, [reading, wantToRead, read, didNotFinish]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,36 +38,53 @@ const SearchBook: React.FC = () => {
     setResults(response.data.docs);
   };
 
-  const addBook = (book: Book, tab: "reading" | "wantToRead" | "read" | "didNotFinish") => {
+  const addBook = (
+    book: Book,
+    tab: "reading" | "wantToRead" | "read" | "didNotFinish"
+  ) => {
     switch (tab) {
       case "reading":
         setReading([...reading, book]);
+        localStorage.setItem("reading", JSON.stringify([...reading, book]));
         break;
       case "wantToRead":
         setWantToRead([...wantToRead, book]);
+        localStorage.setItem("reading", JSON.stringify([...wantToRead, book]));
         break;
       case "read":
         setRead([...read, book]);
+        localStorage.setItem("reading", JSON.stringify([...read, book]));
         break;
       case "didNotFinish":
         setDidNotFinish([...didNotFinish, book]);
+        localStorage.setItem(
+          "reading",
+          JSON.stringify([...didNotFinish, book])
+        );
         break;
     }
   };
 
-  const removeBook = (book: Book, tab: "reading" | "wantToRead" | "read" | "didNotFinish") => {
+  const removeBook = (
+    book: Book,
+    tab: "reading" | "wantToRead" | "read" | "didNotFinish"
+  ) => {
     switch (tab) {
       case "reading":
-        setReading(reading.filter((b) => b.isbn[0] !== book.isbn[0]));
+        setReading(reading.filter((b: any) => b.isbn[0] !== book.isbn[0]));
         break;
       case "wantToRead":
-        setWantToRead(wantToRead.filter((b) => b.isbn[0] !== book.isbn[0]));
+        setWantToRead(
+          wantToRead.filter((b: any) => b.isbn[0] !== book.isbn[0])
+        );
         break;
       case "read":
-        setRead(read.filter((b) => b.isbn[0] !== book.isbn[0]));
+        setRead(read.filter((b: any) => b.isbn[0] !== book.isbn[0]));
         break;
       case "didNotFinish":
-        setDidNotFinish(didNotFinish.filter((b) => b.isbn[0] !== book.isbn[0]));
+        setDidNotFinish(
+          didNotFinish.filter((b: any) => b.isbn[0] !== book.isbn[0])
+        );
         break;
     }
   };
@@ -68,23 +100,31 @@ const SearchBook: React.FC = () => {
         <button type="submit">Search</button>
       </form>
       <ul>
-        {results.map((book) => (
+        {results.map((book: Book) => (
           <li key={book.isbn ? book.isbn[0] : book.title}>
             {book.title} by {book.author_name.join(", ")}
-            <button onClick={() => addBook(book, "reading")}>Add to reading</button>
-            <button onClick={() => addBook(book, "wantToRead")}>Add to want to read</button>
+            <button onClick={() => addBook(book, "reading")}>
+              Add to reading
+            </button>
+            <button onClick={() => addBook(book, "wantToRead")}>
+              Add to want to read
+            </button>
             <button onClick={() => addBook(book, "read")}>Add to read</button>
-            <button onClick={() => addBook(book, "didNotFinish")}>Add to didn't finish</button>
+            <button onClick={() => addBook(book, "didNotFinish")}>
+              Add to didn't finish
+            </button>
           </li>
         ))}
       </ul>
       <div>
         <h2>Reading</h2>
         <ul>
-          {reading.map((book) => (
+          {reading.map((book: Book) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "reading")}>Remove</button>
+              <button onClick={() => removeBook(book, "reading")}>
+                Remove
+              </button>
             </li>
           ))}
         </ul>
@@ -92,10 +132,12 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Want to read</h2>
         <ul>
-          {wantToRead.map((book) => (
+          {wantToRead.map((book: Book) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "wantToRead")}>Remove</button>
+              <button onClick={() => removeBook(book, "wantToRead")}>
+                Remove
+              </button>
             </li>
           ))}
         </ul>
@@ -103,7 +145,7 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Read</h2>
         <ul>
-          {read.map((book) => (
+          {read.map((book: Book) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
               <button onClick={() => removeBook(book, "read")}>Remove</button>
@@ -114,10 +156,12 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Didn't finish</h2>
         <ul>
-          {didNotFinish.map((book) => (
+          {didNotFinish.map((book: Book) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "didNotFinish")}>Remove</button>
+              <button onClick={() => removeBook(book, "didNotFinish")}>
+                Remove
+              </button>
             </li>
           ))}
         </ul>
@@ -127,4 +171,3 @@ const SearchBook: React.FC = () => {
 };
 
 export default SearchBook;
-

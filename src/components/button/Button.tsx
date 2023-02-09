@@ -11,7 +11,7 @@ export interface ButtonProps extends ButtonBaseProps {
 }
 
 export default function Button({ label, ...rest }: ButtonProps) {
-    return <MuiButton {...rest}>{label}</MuiButton>;
+  return <MuiButton {...rest}>{label}</MuiButton>;
 }
 
 Button.defaultProps = {
