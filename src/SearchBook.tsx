@@ -33,7 +33,7 @@ const SearchBook: React.FC = () => {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const response = await axios.get(
-      `http://openlibrary.org/search.json?author=${searchTerm}`
+      `https://openlibrary.org/search.json?author=${searchTerm}`
     );
     setResults(response.data.docs);
   };
