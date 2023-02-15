@@ -99,6 +99,9 @@ const SearchBook: React.FC = () => {
     }
   };
 
+  const shouldDisplayNoResult =
+    !loading && results.length === 0 && searchTerm !== "";
+
   return (
     <div>
       <form onSubmit={handleSearch}>
@@ -112,11 +115,9 @@ const SearchBook: React.FC = () => {
           Clear
         </button>
       </form>
-      {loading ? (
-        <LoadingSpinner />
-      ) : results.length === 0 ? (
-        <NoResults />
-      ) : (
+      {loading && <LoadingSpinner />}
+      {shouldDisplayNoResult && <NoResults />}
+      {!loading && results.length > 0 && (
         <ul>
           {results.map((book: Book) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
