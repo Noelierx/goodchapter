@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import LoadingSpinner from "./components/loadingSpinner";
 
 interface Book {
   title: string;
@@ -9,6 +10,7 @@ interface Book {
 
 const SearchBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Book[]>([]);
   const [reading, setReading] = useState(
     JSON.parse(localStorage.getItem("reading") || "[]")
@@ -32,11 +34,14 @@ const SearchBook: React.FC = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     const response = await axios.get(
       `http://openlibrary.org/search.json?author=${searchTerm}`
     );
     setResults(response.data.docs);
+    setLoading(false);
   };
+  
 
   const addBook = (
     book: Book,
@@ -99,6 +104,9 @@ const SearchBook: React.FC = () => {
         />
         <button type="submit">Search</button>
       </form>
+      {loading ? (
+      <LoadingSpinner />
+    ) : (
       <ul>
         {results.map((book: Book) => (
           <li key={book.isbn ? book.isbn[0] : book.title}>
@@ -116,6 +124,7 @@ const SearchBook: React.FC = () => {
           </li>
         ))}
       </ul>
+    )}
       <div>
         <h2>Reading</h2>
         <ul>

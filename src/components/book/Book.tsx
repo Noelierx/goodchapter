@@ -7,7 +7,6 @@ import Typography from "@mui/material/Typography";
 interface Props {
   title: string;
   author: string;
-  description: string;
   isbn: string;
   cover: string;
 }
@@ -15,7 +14,6 @@ interface Props {
 export const Book: React.FC<Props> = ({
   title,
   author,
-  description,
   isbn,
   cover,
 }) => {
@@ -32,9 +30,6 @@ export const Book: React.FC<Props> = ({
         </Typography>
         <Typography variant="body2" color="textSecondary" component="p">
           ISBN: {isbn}
-        </Typography>
-        <Typography variant="body2" component="p">
-          {description}
         </Typography>
       </CardContent>
     </Card>
