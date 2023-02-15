@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
-import Book from "./components/book";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 
@@ -114,7 +113,7 @@ const SearchBook: React.FC = () => {
           alignItems: "center",
           textAlign: "center",
           margin: "0 auto",
-          mt: 2
+          mt: 2,
         }}
       >
         <form onSubmit={handleSearch}>
