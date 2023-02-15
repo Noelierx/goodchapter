@@ -8,9 +8,8 @@ import Box from "@mui/material/Box";
 
 interface Book {
   title: string;
-  author_name: string | string[];
-  isbn: string | string[];
-  cover: string;
+  author_name: string[];
+  isbn: string[];
 }
 
 const SearchBook: React.FC = () => {
@@ -115,7 +114,7 @@ const SearchBook: React.FC = () => {
           alignItems: "center",
           textAlign: "center",
           margin: "0 auto",
-          mt: 2,
+          mt: 2
         }}
       >
         <form onSubmit={handleSearch}>
