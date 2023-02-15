@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
+import Book from "./components/book";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
 
 interface Book {
   title: string;
-  author_name: string[];
-  isbn: string[];
+  author_name: string | string[];
+  isbn: string | string[];
+  cover: string;
 }
 
 const SearchBook: React.FC = () => {
@@ -104,17 +108,30 @@ const SearchBook: React.FC = () => {
 
   return (
     <div>
-      <form onSubmit={handleSearch}>
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button type="submit">Search</button>
-        <button type="button" onClick={clearSearch}>
-          Clear
-        </button>
-      </form>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          margin: "0 auto",
+          mt: 2,
+        }}
+      >
+        <form onSubmit={handleSearch}>
+          <TextField
+            helperText="Please enter an author name"
+            label="Search for an author"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button type="submit">Search</button>
+          <button type="button" onClick={clearSearch}>
+            Clear
+          </button>
+        </form>
+      </Box>
       {loading && <LoadingSpinner />}
       {shouldDisplayNoResult && <NoResults />}
       {!loading && results.length > 0 && (
