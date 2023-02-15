@@ -11,12 +11,7 @@ interface Props {
   cover: string;
 }
 
-export const Book: React.FC<Props> = ({
-  title,
-  author,
-  isbn,
-  cover,
-}) => {
+export const Book: React.FC<Props> = ({ title, author, isbn, cover }) => {
   const coverSrc = `https://covers.openlibrary.org/b/ID/${cover}-S.jpg?default=false`;
   return (
     <Card sx={{ maxWidth: 345 }}>

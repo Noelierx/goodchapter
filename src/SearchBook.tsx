@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LoadingSpinner from "./components/loadingSpinner";
+import NoResults from "./components/noResults";
 
 interface Book {
   title: string;
@@ -41,7 +42,11 @@ const SearchBook: React.FC = () => {
     setResults(response.data.docs);
     setLoading(false);
   };
-  
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    setResults([]);
+  };
 
   const addBook = (
     book: Book,
@@ -103,28 +108,33 @@ const SearchBook: React.FC = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button type="submit">Search</button>
+        <button type="button" onClick={clearSearch}>
+          Clear
+        </button>
       </form>
       {loading ? (
-      <LoadingSpinner />
-    ) : (
-      <ul>
-        {results.map((book: Book) => (
-          <li key={book.isbn ? book.isbn[0] : book.title}>
-            {book.title} by {book.author_name.join(", ")}
-            <button onClick={() => addBook(book, "reading")}>
-              Add to reading
-            </button>
-            <button onClick={() => addBook(book, "wantToRead")}>
-              Add to want to read
-            </button>
-            <button onClick={() => addBook(book, "read")}>Add to read</button>
-            <button onClick={() => addBook(book, "didNotFinish")}>
-              Add to didn't finish
-            </button>
-          </li>
-        ))}
-      </ul>
-    )}
+        <LoadingSpinner />
+      ) : results.length === 0 ? (
+        <NoResults />
+      ) : (
+        <ul>
+          {results.map((book: Book) => (
+            <li key={book.isbn ? book.isbn[0] : book.title}>
+              {book.title} by {book.author_name.join(", ")}
+              <button onClick={() => addBook(book, "reading")}>
+                Add to reading
+              </button>
+              <button onClick={() => addBook(book, "wantToRead")}>
+                Add to want to read
+              </button>
+              <button onClick={() => addBook(book, "read")}>Add to read</button>
+              <button onClick={() => addBook(book, "didNotFinish")}>
+                Add to didn't finish
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <div>
         <h2>Reading</h2>
         <ul>
