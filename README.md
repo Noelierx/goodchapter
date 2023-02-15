@@ -1,4 +1,5 @@
 # goodchapter
+[![Netlify Status](https://api.netlify.com/api/v1/badges/da28ac42-c39f-4641-bbe5-4eb5d419aa70/deploy-status)](https://app.netlify.com/sites/goodchapter/deploys)
 
 Goodchapter is an app that allows you to track the books you are reading, want to read or have read with OpenLibrary API.
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
