@@ -21,5 +21,6 @@ export const Default: ComponentStory<typeof Book> = () => (
     author="F. Scott Fitzgerald"
     isbn="9780743273565"
     cover="https://m.media-amazon.com/images/I/41yJ75gpV-L._SY346_.jpg"
+    children="Remove"
   />
 );

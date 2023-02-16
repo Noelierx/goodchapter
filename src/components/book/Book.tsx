@@ -1,7 +1,8 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
 import Typography from "@mui/material/Typography";
 
 interface Props {
@@ -9,13 +10,19 @@ interface Props {
   author: string;
   isbn: string;
   cover: string;
+  children: ReactNode;
 }
 
-export const Book: React.FC<Props> = ({ title, author, isbn, cover }) => {
-  const coverSrc = `https://covers.openlibrary.org/b/ID/${cover}-S.jpg?default=false`;
+export const Book: React.FC<Props> = ({
+  title,
+  author,
+  isbn,
+  cover,
+  children,
+}) => {
   return (
     <Card sx={{ maxWidth: 345 }}>
-      <CardMedia sx={{ height: 140 }} image={coverSrc} title={title} />
+      {cover && <CardMedia sx={{ height: 140 }} image={cover} title={title} />}
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2">
           {title}
@@ -27,6 +34,7 @@ export const Book: React.FC<Props> = ({ title, author, isbn, cover }) => {
           ISBN: {isbn}
         </Typography>
       </CardContent>
+      <CardActions>{children}</CardActions>
     </Card>
   );
 };

@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
+import Book from "./components/book";
+
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/lab/Alert";
 
 interface Book {
   title: string;
@@ -15,6 +22,11 @@ const SearchBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Book[]>([]);
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<
+    "success" | "error" | "warning" | "info"
+  >("success");
   const [reading, setReading] = useState(
     JSON.parse(localStorage.getItem("reading") || "[]")
   );
@@ -58,14 +70,17 @@ const SearchBook: React.FC = () => {
       case "reading":
         setReading([...reading, book]);
         localStorage.setItem("reading", JSON.stringify([...reading, book]));
+        setSnackbarMessage(`Added '${book.title}' to Reading List`);
         break;
       case "wantToRead":
         setWantToRead([...wantToRead, book]);
         localStorage.setItem("reading", JSON.stringify([...wantToRead, book]));
+        setSnackbarMessage(`Added '${book.title}' to Want to Read List`);
         break;
       case "read":
         setRead([...read, book]);
         localStorage.setItem("reading", JSON.stringify([...read, book]));
+        setSnackbarMessage(`Added '${book.title}' to Read List`);
         break;
       case "didNotFinish":
         setDidNotFinish([...didNotFinish, book]);
@@ -73,8 +88,17 @@ const SearchBook: React.FC = () => {
           "reading",
           JSON.stringify([...didNotFinish, book])
         );
+        setSnackbarMessage(`Added '${book.title}' to Did Not Finish List`);
         break;
     }
+    setSnackbarSeverity("success");
+    setShowSnackbar(true);
+  };
+
+  const handleSnackbarClose = () => {
+    setShowSnackbar(false);
+    setSnackbarMessage("");
+    setSnackbarSeverity("success");
   };
 
   const removeBook = (
@@ -106,6 +130,15 @@ const SearchBook: React.FC = () => {
 
   return (
     <div>
+      <Snackbar
+        open={showSnackbar}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
       <Box
         sx={{
           display: "flex",
@@ -133,23 +166,45 @@ const SearchBook: React.FC = () => {
       {loading && <LoadingSpinner />}
       {shouldDisplayNoResult && <NoResults />}
       {!loading && results.length > 0 && (
-        <ul>
-          {results.map((book: Book) => (
-            <li key={book.isbn ? book.isbn[0] : book.title}>
-              {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => addBook(book, "reading")}>
-                Add to reading
-              </button>
-              <button onClick={() => addBook(book, "wantToRead")}>
-                Add to want to read
-              </button>
-              <button onClick={() => addBook(book, "read")}>Add to read</button>
-              <button onClick={() => addBook(book, "didNotFinish")}>
-                Add to didn't finish
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Container sx={{ py: 8 }} maxWidth="md">
+          <Grid container spacing={4}>
+            {results.map((book: Book) => {
+              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
+              return (
+                <Grid
+                  item
+                  key={book.isbn ? book.isbn[0] : book.title}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                >
+                  <Book
+                    title={book.title}
+                    author={book.author_name.join(", ")}
+                    cover={coverSrc}
+                    isbn={book.isbn?.[0]}
+                    children={
+                      <>
+                        <button onClick={() => addBook(book, "reading")}>
+                          Add to reading
+                        </button>
+                        <button onClick={() => addBook(book, "wantToRead")}>
+                          Add to want to read
+                        </button>
+                        <button onClick={() => addBook(book, "read")}>
+                          Add to read
+                        </button>
+                        <button onClick={() => addBook(book, "didNotFinish")}>
+                          Add to didn't finish
+                        </button>
+                      </>
+                    }
+                  />
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
       )}
       <div>
         <h2>Reading</h2>
