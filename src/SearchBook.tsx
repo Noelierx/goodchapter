@@ -12,7 +12,7 @@ import Grid from "@mui/material/Grid";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/lab/Alert";
 
-interface Book {
+interface BookInfo {
   title: string;
   author_name: string[];
   isbn: string[];
@@ -21,7 +21,7 @@ interface Book {
 const SearchBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<Book[]>([]);
+  const [results, setResults] = useState<BookInfo[]>([]);
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<
@@ -63,7 +63,7 @@ const SearchBook: React.FC = () => {
   };
 
   const addBook = (
-    book: Book,
+    book: BookInfo,
     tab: "reading" | "wantToRead" | "read" | "didNotFinish"
   ) => {
     switch (tab) {
@@ -102,7 +102,7 @@ const SearchBook: React.FC = () => {
   };
 
   const removeBook = (
-    book: Book,
+    book: BookInfo,
     tab: "reading" | "wantToRead" | "read" | "didNotFinish"
   ) => {
     switch (tab) {
@@ -168,7 +168,7 @@ const SearchBook: React.FC = () => {
       {!loading && results.length > 0 && (
         <Container sx={{ py: 8 }} maxWidth="md">
           <Grid container spacing={4}>
-            {results.map((book: Book) => {
+            {results.map((book: BookInfo) => {
               const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
               return (
                 <Grid
@@ -209,7 +209,7 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Reading</h2>
         <ul>
-          {reading.map((book: Book) => (
+          {reading.map((book: BookInfo) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
               <button onClick={() => removeBook(book, "reading")}>
@@ -222,7 +222,7 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Want to read</h2>
         <ul>
-          {wantToRead.map((book: Book) => (
+          {wantToRead.map((book: BookInfo) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
               <button onClick={() => removeBook(book, "wantToRead")}>
@@ -235,7 +235,7 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Read</h2>
         <ul>
-          {read.map((book: Book) => (
+          {read.map((book: BookInfo) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
               <button onClick={() => removeBook(book, "read")}>Remove</button>
@@ -246,7 +246,7 @@ const SearchBook: React.FC = () => {
       <div>
         <h2>Didn't finish</h2>
         <ul>
-          {didNotFinish.map((book: Book) => (
+          {didNotFinish.map((book: BookInfo) => (
             <li key={book.isbn ? book.isbn[0] : book.title}>
               {book.title} by {book.author_name.join(", ")}
               <button onClick={() => removeBook(book, "didNotFinish")}>
