@@ -5,12 +5,16 @@ import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
 import Book from "./components/book";
 
-import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/lab/Alert";
+import Alert from "@mui/material/Alert";
+import Stack from "@mui/material/Stack";
+import { TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import SearchIcon from "@mui/icons-material/Search";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface BookInfo {
   title: string;
@@ -150,17 +154,29 @@ const SearchBook: React.FC = () => {
         }}
       >
         <form onSubmit={handleSearch}>
-          <TextField
-            helperText="Please enter an author name"
-            label="Search for an author"
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button type="submit">Search</button>
-          <button type="button" onClick={clearSearch}>
-            Clear
-          </button>
+          <Stack direction="row" spacing={2}>
+            <TextField
+              label="Search for an author"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Button
+              variant="contained"
+              type="submit"
+              startIcon={<SearchIcon />}
+            >
+              Search
+            </Button>
+            <Button
+              variant="outlined"
+              type="button"
+              onClick={clearSearch}
+              startIcon={<DeleteIcon />}
+            >
+              Clear
+            </Button>
+          </Stack>
         </form>
       </Box>
       {loading && <LoadingSpinner />}
@@ -185,18 +201,37 @@ const SearchBook: React.FC = () => {
                     isbn={book.isbn?.[0]}
                     children={
                       <>
-                        <button onClick={() => addBook(book, "reading")}>
-                          Add to reading
-                        </button>
-                        <button onClick={() => addBook(book, "wantToRead")}>
-                          Add to want to read
-                        </button>
-                        <button onClick={() => addBook(book, "read")}>
-                          Add to read
-                        </button>
-                        <button onClick={() => addBook(book, "didNotFinish")}>
-                          Add to didn't finish
-                        </button>
+                        <Stack
+                          direction="column"
+                          justifyContent="center"
+                          alignItems="center"
+                          spacing={2}
+                        >
+                          <Button
+                            variant="outlined"
+                            onClick={() => addBook(book, "reading")}
+                          >
+                            Add to reading
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => addBook(book, "wantToRead")}
+                          >
+                            Add to want to read
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => addBook(book, "read")}
+                          >
+                            Add to read
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => addBook(book, "didNotFinish")}
+                          >
+                            Add to didn't finish
+                          </Button>
+                        </Stack>
                       </>
                     }
                   />
@@ -208,53 +243,151 @@ const SearchBook: React.FC = () => {
       )}
       <div>
         <h2>Reading</h2>
-        <ul>
-          {reading.map((book: BookInfo) => (
-            <li key={book.isbn ? book.isbn[0] : book.title}>
-              {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "reading")}>
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Container sx={{ py: 8 }} maxWidth="md">
+          <Grid container spacing={4}>
+            {reading.map((book: BookInfo) => {
+              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
+              return (
+                <Grid
+                  item
+                  key={book.isbn ? book.isbn[0] : book.title}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                >
+                  <Book
+                    title={book.title}
+                    author={book.author_name.join(", ")}
+                    cover={coverSrc}
+                    isbn={book.isbn?.[0]}
+                    children={
+                      <>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeBook(book, "reading")}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    }
+                  />
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
       </div>
       <div>
         <h2>Want to read</h2>
-        <ul>
-          {wantToRead.map((book: BookInfo) => (
-            <li key={book.isbn ? book.isbn[0] : book.title}>
-              {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "wantToRead")}>
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Container sx={{ py: 8 }} maxWidth="md">
+          <Grid container spacing={4}>
+            {wantToRead.map((book: BookInfo) => {
+              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
+              return (
+                <Grid
+                  item
+                  key={book.isbn ? book.isbn[0] : book.title}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                >
+                  <Book
+                    title={book.title}
+                    author={book.author_name.join(", ")}
+                    cover={coverSrc}
+                    isbn={book.isbn?.[0]}
+                    children={
+                      <>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeBook(book, "wantToRead")}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    }
+                  />
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
       </div>
       <div>
         <h2>Read</h2>
-        <ul>
-          {read.map((book: BookInfo) => (
-            <li key={book.isbn ? book.isbn[0] : book.title}>
-              {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "read")}>Remove</button>
-            </li>
-          ))}
-        </ul>
+        <Container sx={{ py: 8 }} maxWidth="md">
+          <Grid container spacing={4}>
+            {read.map((book: BookInfo) => {
+              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
+              return (
+                <Grid
+                  item
+                  key={book.isbn ? book.isbn[0] : book.title}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                >
+                  <Book
+                    title={book.title}
+                    author={book.author_name.join(", ")}
+                    cover={coverSrc}
+                    isbn={book.isbn?.[0]}
+                    children={
+                      <>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeBook(book, "read")}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    }
+                  />
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
       </div>
       <div>
         <h2>Didn't finish</h2>
-        <ul>
-          {didNotFinish.map((book: BookInfo) => (
-            <li key={book.isbn ? book.isbn[0] : book.title}>
-              {book.title} by {book.author_name.join(", ")}
-              <button onClick={() => removeBook(book, "didNotFinish")}>
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
+        <Container sx={{ py: 8 }} maxWidth="md">
+          <Grid container spacing={4}>
+            {didNotFinish.map((book: BookInfo) => {
+              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
+              return (
+                <Grid
+                  item
+                  key={book.isbn ? book.isbn[0] : book.title}
+                  xs={12}
+                  sm={6}
+                  md={4}
+                >
+                  <Book
+                    title={book.title}
+                    author={book.author_name.join(", ")}
+                    cover={coverSrc}
+                    isbn={book.isbn?.[0]}
+                    children={
+                      <>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeBook(book, "didNotFinish")}
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    }
+                  />
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Container>
       </div>
     </div>
   );

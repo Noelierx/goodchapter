@@ -22,7 +22,7 @@ export const Book: React.FC<Props> = ({
 }) => {
   return (
     <Card sx={{ maxWidth: 345 }}>
-      {cover && <CardMedia sx={{ height: 140 }} image={cover} title={title} />}
+      {cover && <CardMedia sx={{ height: 273 }} image={cover} title={title} />}
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2">
           {title}
