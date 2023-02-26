@@ -5,14 +5,16 @@ import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
 import Book from "./components/book";
 
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import Grid from "@mui/material/Grid";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
-import Stack from "@mui/material/Stack";
-import { TextField } from "@mui/material";
-import Button from "@mui/material/Button";
+import {
+  Box,
+  Container,
+  Grid,
+  Snackbar,
+  Stack,
+  TextField,
+  Button,
+  Alert,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -78,18 +80,21 @@ const SearchBook: React.FC = () => {
         break;
       case "wantToRead":
         setWantToRead([...wantToRead, book]);
-        localStorage.setItem("reading", JSON.stringify([...wantToRead, book]));
+        localStorage.setItem(
+          "wantToRead",
+          JSON.stringify([...wantToRead, book])
+        );
         setSnackbarMessage(`Added '${book.title}' to Want to Read List`);
         break;
       case "read":
         setRead([...read, book]);
-        localStorage.setItem("reading", JSON.stringify([...read, book]));
+        localStorage.setItem("read", JSON.stringify([...read, book]));
         setSnackbarMessage(`Added '${book.title}' to Read List`);
         break;
       case "didNotFinish":
         setDidNotFinish([...didNotFinish, book]);
         localStorage.setItem(
-          "reading",
+          "didNotFinish",
           JSON.stringify([...didNotFinish, book])
         );
         setSnackbarMessage(`Added '${book.title}' to Did Not Finish List`);
