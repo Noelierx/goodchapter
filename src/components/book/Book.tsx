@@ -8,8 +8,8 @@ import Typography from "@mui/material/Typography";
 interface Props {
   title: string;
   author: string;
-  isbn: string;
-  cover: string;
+  isbn?: string;
+  cover?: string;
   children: ReactNode;
 }
 
@@ -22,7 +22,7 @@ export const Book: React.FC<Props> = ({
 }) => {
   return (
     <Card sx={{ maxWidth: 345 }}>
-      {cover && <CardMedia sx={{ height: 273 }} image={cover} title={title} />}
+      {cover ? <CardMedia sx={{ height: 273 }} image={cover} title={title} /> : null}
       <CardContent>
         <Typography gutterBottom variant="h5" component="h2">
           {title}
@@ -30,9 +30,11 @@ export const Book: React.FC<Props> = ({
         <Typography variant="body2" color="textSecondary" component="p">
           {author}
         </Typography>
-        <Typography variant="body2" color="textSecondary" component="p">
-          ISBN: {isbn}
-        </Typography>
+        {isbn ? (
+          <Typography variant="body2" color="textSecondary" component="p">
+            ISBN: {isbn}
+          </Typography>
+        ) : null}
       </CardContent>
       <CardActions>{children}</CardActions>
     </Card>

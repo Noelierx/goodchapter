@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-
+import useLocalStorage from "./hooks/useLocalStorage";
+import useSearch from "./hooks/useSearch";
 import LoadingSpinner from "./components/loadingSpinner";
 import NoResults from "./components/noResults";
 import Book from "./components/book";
+import { BookInfo } from "./types";
 
 import {
   Box,
@@ -14,65 +15,59 @@ import {
   TextField,
   Button,
   Alert,
+  Tabs,
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-interface BookInfo {
-  title: string;
-  author_name: string[];
-  isbn: string[];
-}
-
 const SearchBook: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<BookInfo[]>([]);
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [searchType, setSearchType] = useState<"author" | "title" | "isbn">(
+    "author"
+  );
+  const [tab, setTab] = useState(0); // 0 = Search, 1 = Reading, 2 = WantToRead, 3 = Read, 4 = DidNotFinish
+
+  const [reading, setReading] = useLocalStorage<BookInfo[]>("reading", []);
+  const [wantToRead, setWantToRead] = useLocalStorage<BookInfo[]>(
+    "wantToRead",
+    []
+  );
+  const [read, setRead] = useLocalStorage<BookInfo[]>("read", []);
+  const [didNotFinish, setDidNotFinish] = useLocalStorage<BookInfo[]>(
+    "didNotFinish",
+    []
+  );
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<
-    "success" | "error" | "warning" | "info"
+    "success" | "error" | "info" | "warning"
   >("success");
-  const [reading, setReading] = useState(
-    JSON.parse(localStorage.getItem("reading") || "[]")
-  );
-  const [wantToRead, setWantToRead] = useState(
-    JSON.parse(localStorage.getItem("wantToRead") || "[]")
-  );
-  const [read, setRead] = useState(
-    JSON.parse(localStorage.getItem("read") || "[]")
-  );
-  const [didNotFinish, setDidNotFinish] = useState(
-    JSON.parse(localStorage.getItem("didNotFinish") || "[]")
-  );
+  const [showSnackbar, setShowSnackbar] = useState(false);
 
+  const { loading, results, handleSearch } = useSearch();
+
+  // Debounce automatique quand on tape (uniquement quand l'onglet Search est actif)
   useEffect(() => {
-    localStorage.setItem("reading", JSON.stringify(reading));
-    localStorage.setItem("wantToRead", JSON.stringify(wantToRead));
-    localStorage.setItem("read", JSON.stringify(read));
-    localStorage.setItem("didNotFinish", JSON.stringify(didNotFinish));
-  }, [reading, wantToRead, read, didNotFinish]);
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const response = await axios.get(
-      `https://openlibrary.org/search.json?author=${searchTerm}`
-    );
-    setResults(response.data.docs);
-    setLoading(false);
-  };
+    if (tab !== 0) return;
+    const id = setTimeout(() => {
+      if (searchTerm.trim()) handleSearch(searchTerm.trim(), searchType);
+    }, 600);
+    return () => clearTimeout(id);
+  }, [searchTerm, searchType, tab, handleSearch]);
 
   const clearSearch = () => {
     setSearchTerm("");
-    setResults([]);
   };
 
   const addBook = (
     book: BookInfo,
-    tab: "reading" | "wantToRead" | "read" | "didNotFinish"
+    list: "reading" | "wantToRead" | "read" | "didNotFinish"
   ) => {
-    switch (tab) {
+    switch (list) {
       case "reading":
         setReading([...reading, book]);
         localStorage.setItem("reading", JSON.stringify([...reading, book]));
@@ -104,38 +99,54 @@ const SearchBook: React.FC = () => {
     setShowSnackbar(true);
   };
 
-  const handleSnackbarClose = () => {
-    setShowSnackbar(false);
-    setSnackbarMessage("");
-    setSnackbarSeverity("success");
-  };
-
   const removeBook = (
     book: BookInfo,
-    tab: "reading" | "wantToRead" | "read" | "didNotFinish"
+    list: "reading" | "wantToRead" | "read" | "didNotFinish"
   ) => {
-    switch (tab) {
+    const filterBooks = (books: BookInfo[]) =>
+      books.filter((b) => {
+        const bIsbn = b.isbn && b.isbn.length > 0 ? b.isbn[0] : undefined;
+        const targetIsbn = book.isbn && book.isbn.length > 0 ? book.isbn[0] : undefined;
+
+        // Si les deux ont un ISBN, on compare par ISBN
+        if (bIsbn !== undefined && targetIsbn !== undefined) {
+          return bIsbn !== targetIsbn;
+        }
+
+        // Sinon on compare par titre + premier auteur (si présents)
+        const sameTitle = b.title === book.title;
+        const bAuthor = b.author_name && b.author_name.length > 0 ? b.author_name[0] : "";
+        const targetAuthor = book.author_name && book.author_name.length > 0 ? book.author_name[0] : "";
+        if (sameTitle && bAuthor && targetAuthor) {
+          return bAuthor !== targetAuthor;
+        }
+
+        // Si aucune clé utile, conserver l'élément (ne pas supprimer tout)
+        return true;
+      });
+
+    switch (list) {
       case "reading":
-        setReading(reading.filter((b: any) => b.isbn[0] !== book.isbn[0]));
+        setReading(filterBooks(reading));
         break;
       case "wantToRead":
-        setWantToRead(
-          wantToRead.filter((b: any) => b.isbn[0] !== book.isbn[0])
-        );
+        setWantToRead(filterBooks(wantToRead));
         break;
       case "read":
-        setRead(read.filter((b: any) => b.isbn[0] !== book.isbn[0]));
+        setRead(filterBooks(read));
         break;
       case "didNotFinish":
-        setDidNotFinish(
-          didNotFinish.filter((b: any) => b.isbn[0] !== book.isbn[0])
-        );
+        setDidNotFinish(filterBooks(didNotFinish));
         break;
     }
   };
 
   const shouldDisplayNoResult =
     !loading && results.length === 0 && searchTerm !== "";
+
+  const handleSnackbarClose = () => {
+    setShowSnackbar(false);
+  };
 
   return (
     <div>
@@ -148,252 +159,332 @@ const SearchBook: React.FC = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          margin: "0 auto",
-          mt: 2,
-        }}
-      >
-        <form onSubmit={handleSearch}>
-          <Stack direction="row" spacing={2}>
-            <TextField
-              label="Search for an author"
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Button
-              variant="contained"
-              type="submit"
-              startIcon={<SearchIcon />}
-            >
-              Search
-            </Button>
-            <Button
-              variant="outlined"
-              type="button"
-              onClick={clearSearch}
-              startIcon={<DeleteIcon />}
-            >
-              Clear
-            </Button>
-          </Stack>
-        </form>
+
+      {/* Onglets */}
+      <Box sx={{ width: "100%", bgcolor: "background.paper", mb: 2 }}>
+        <Tabs
+          value={tab}
+          onChange={(_, newValue) => setTab(newValue)}
+          centered
+        >
+          <Tab label="Search" />
+          <Tab label="Reading" />
+          <Tab label="Want to read" />
+          <Tab label="Read" />
+          <Tab label="Didn't finish" />
+        </Tabs>
       </Box>
-      {loading && <LoadingSpinner />}
-      {shouldDisplayNoResult && <NoResults />}
-      {!loading && results.length > 0 && (
-        <Container sx={{ py: 8 }} maxWidth="md">
-          <Grid container spacing={4}>
-            {results.map((book: BookInfo) => {
-              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
-              return (
-                <Grid
-                  item
-                  key={book.isbn ? book.isbn[0] : book.title}
-                  xs={12}
-                  sm={6}
-                  md={4}
+
+      {/* Panel Search */}
+      {tab === 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            margin: "0 auto",
+            mt: 2,
+          }}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearch(searchTerm.trim(), searchType);
+            }}
+          >
+            <Stack direction="row" spacing={2} alignItems="center">
+              <TextField
+                label={`Search by ${searchType}`}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FormControl sx={{ minWidth: 140 }}>
+                <InputLabel id="search-type-label">Type</InputLabel>
+                <Select
+                  labelId="search-type-label"
+                  value={searchType}
+                  label="Type"
+                  onChange={(e) =>
+                    setSearchType(e.target.value as "author" | "title" | "isbn")
+                  }
                 >
-                  <Book
-                    title={book.title}
-                    author={book.author_name.join(", ")}
-                    cover={coverSrc}
-                    isbn={book.isbn?.[0]}
-                    children={
-                      <>
-                        <Stack
-                          direction="column"
-                          justifyContent="center"
-                          alignItems="center"
-                          spacing={2}
-                        >
-                          <Button
-                            variant="outlined"
-                            onClick={() => addBook(book, "reading")}
-                          >
-                            Add to reading
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => addBook(book, "wantToRead")}
-                          >
-                            Add to want to read
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => addBook(book, "read")}
-                          >
-                            Add to read
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={() => addBook(book, "didNotFinish")}
-                          >
-                            Add to didn't finish
-                          </Button>
-                        </Stack>
-                      </>
-                    }
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
+                  <MenuItem value="author">Author</MenuItem>
+                  <MenuItem value="title">Title</MenuItem>
+                  <MenuItem value="isbn">ISBN</MenuItem>
+                </Select>
+              </FormControl>
+              <Button
+                variant="contained"
+                type="submit"
+                startIcon={<SearchIcon />}
+              >
+                Search
+              </Button>
+              <Button
+                variant="outlined"
+                type="button"
+                onClick={clearSearch}
+                startIcon={<DeleteIcon />}
+              >
+                Clear
+              </Button>
+            </Stack>
+          </form>
+
+          {loading && <LoadingSpinner />}
+          {shouldDisplayNoResult && <NoResults />}
+
+          {!loading && results.length > 0 && (
+            <Container sx={{ py: 8 }} maxWidth="md">
+              <Grid container spacing={4}>
+                {results.map((book: BookInfo) => {
+                  // Priorité : ISBN (si présent) -> cover_i -> pas d'image
+                  const coverSrc =
+                    book.isbn && book.isbn.length > 0
+                      ? `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-M.jpg?default=false`
+                      : book.cover_i
+                      ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                      : "";
+                  return (
+                    <Grid
+                      item
+                      key={book.isbn && book.isbn.length > 0 ? book.isbn[0] : book.title}
+                      xs={12}
+                      sm={6}
+                      md={4}
+                    >
+                      <Book
+                        title={book.title}
+                        author={(book.author_name || []).join(", ")}
+                        cover={coverSrc || undefined}
+                        isbn={book.isbn?.[0]}
+                        children={
+                          <>
+                            <Stack
+                              direction="column"
+                              justifyContent="center"
+                              alignItems="center"
+                              spacing={2}
+                            >
+                              <Button
+                                variant="outlined"
+                                onClick={() => addBook(book, "reading")}
+                              >
+                                Add to reading
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                onClick={() => addBook(book, "wantToRead")}
+                              >
+                                Add to want to read
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                onClick={() => addBook(book, "read")}
+                              >
+                                Add to read
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                onClick={() => addBook(book, "didNotFinish")}
+                              >
+                                Add to didn't finish
+                              </Button>
+                            </Stack>
+                          </>
+                        }
+                      />
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Container>
+          )}
+        </Box>
       )}
-      <div>
-        <h2>Reading</h2>
-        <Container sx={{ py: 8 }} maxWidth="md">
-          <Grid container spacing={4}>
-            {reading.map((book: BookInfo) => {
-              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
-              return (
-                <Grid
-                  item
-                  key={book.isbn ? book.isbn[0] : book.title}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                >
-                  <Book
-                    title={book.title}
-                    author={book.author_name.join(", ")}
-                    cover={coverSrc}
-                    isbn={book.isbn?.[0]}
-                    children={
-                      <>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeBook(book, "reading")}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    }
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
-      </div>
-      <div>
-        <h2>Want to read</h2>
-        <Container sx={{ py: 8 }} maxWidth="md">
-          <Grid container spacing={4}>
-            {wantToRead.map((book: BookInfo) => {
-              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
-              return (
-                <Grid
-                  item
-                  key={book.isbn ? book.isbn[0] : book.title}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                >
-                  <Book
-                    title={book.title}
-                    author={book.author_name.join(", ")}
-                    cover={coverSrc}
-                    isbn={book.isbn?.[0]}
-                    children={
-                      <>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeBook(book, "wantToRead")}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    }
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
-      </div>
-      <div>
-        <h2>Read</h2>
-        <Container sx={{ py: 8 }} maxWidth="md">
-          <Grid container spacing={4}>
-            {read.map((book: BookInfo) => {
-              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
-              return (
-                <Grid
-                  item
-                  key={book.isbn ? book.isbn[0] : book.title}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                >
-                  <Book
-                    title={book.title}
-                    author={book.author_name.join(", ")}
-                    cover={coverSrc}
-                    isbn={book.isbn?.[0]}
-                    children={
-                      <>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeBook(book, "read")}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    }
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
-      </div>
-      <div>
-        <h2>Didn't finish</h2>
-        <Container sx={{ py: 8 }} maxWidth="md">
-          <Grid container spacing={4}>
-            {didNotFinish.map((book: BookInfo) => {
-              const coverSrc = `https://covers.openlibrary.org/b/isbn/${book.isbn?.[0]}-M.jpg?default=false`;
-              return (
-                <Grid
-                  item
-                  key={book.isbn ? book.isbn[0] : book.title}
-                  xs={12}
-                  sm={6}
-                  md={4}
-                >
-                  <Book
-                    title={book.title}
-                    author={book.author_name.join(", ")}
-                    cover={coverSrc}
-                    isbn={book.isbn?.[0]}
-                    children={
-                      <>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeBook(book, "didNotFinish")}
-                        >
-                          Remove
-                        </Button>
-                      </>
-                    }
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Container>
-      </div>
+
+      {/* Panels listes (Reading, WantToRead, Read, DidNotFinish) */}
+      {tab === 1 && (
+        <div>
+          <h2>Reading</h2>
+          <Container sx={{ py: 8 }} maxWidth="md">
+            <Grid container spacing={4}>
+              {reading.map((book: BookInfo) => {
+                const coverSrc =
+                  book.isbn && book.isbn.length > 0
+                    ? `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-M.jpg?default=false`
+                    : book.cover_i
+                    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                    : "";
+                return (
+                  <Grid
+                    item
+                    key={book.isbn && book.isbn.length > 0 ? book.isbn[0] : book.title}
+                    xs={12}
+                    sm={6}
+                    md={4}
+                  >
+                    <Book
+                      title={book.title}
+                      author={(book.author_name || []).join(", ")}
+                      cover={coverSrc || undefined}
+                      isbn={book.isbn?.[0]}
+                      children={
+                        <>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeBook(book, "reading")}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      }
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Container>
+        </div>
+      )}
+
+      {tab === 2 && (
+        <div>
+          <h2>Want to read</h2>
+          <Container sx={{ py: 8 }} maxWidth="md">
+            <Grid container spacing={4}>
+              {wantToRead.map((book: BookInfo) => {
+                const coverSrc =
+                  book.isbn && book.isbn.length > 0
+                    ? `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-M.jpg?default=false`
+                    : book.cover_i
+                    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                    : "";
+                return (
+                  <Grid
+                    item
+                    key={book.isbn && book.isbn.length > 0 ? book.isbn[0] : book.title}
+                    xs={12}
+                    sm={6}
+                    md={4}
+                  >
+                    <Book
+                      title={book.title}
+                      author={(book.author_name || []).join(", ")}
+                      cover={coverSrc || undefined}
+                      isbn={book.isbn?.[0]}
+                      children={
+                        <>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeBook(book, "wantToRead")}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      }
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Container>
+        </div>
+      )}
+
+      {tab === 3 && (
+        <div>
+          <h2>Read</h2>
+          <Container sx={{ py: 8 }} maxWidth="md">
+            <Grid container spacing={4}>
+              {read.map((book: BookInfo) => {
+                const coverSrc =
+                  book.isbn && book.isbn.length > 0
+                    ? `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-M.jpg?default=false`
+                    : book.cover_i
+                    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                    : "";
+                return (
+                  <Grid
+                    item
+                    key={book.isbn && book.isbn.length > 0 ? book.isbn[0] : book.title}
+                    xs={12}
+                    sm={6}
+                    md={4}
+                  >
+                    <Book
+                      title={book.title}
+                      author={(book.author_name || []).join(", ")}
+                      cover={coverSrc || undefined}
+                      isbn={book.isbn?.[0]}
+                      children={
+                        <>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeBook(book, "read")}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      }
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Container>
+        </div>
+      )}
+
+      {tab === 4 && (
+        <div>
+          <h2>Didn't finish</h2>
+          <Container sx={{ py: 8 }} maxWidth="md">
+            <Grid container spacing={4}>
+              {didNotFinish.map((book: BookInfo) => {
+                const coverSrc =
+                  book.isbn && book.isbn.length > 0
+                    ? `https://covers.openlibrary.org/b/isbn/${book.isbn[0]}-M.jpg?default=false`
+                    : book.cover_i
+                    ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+                    : "";
+                return (
+                  <Grid
+                    item
+                    key={book.isbn && book.isbn.length > 0 ? book.isbn[0] : book.title}
+                    xs={12}
+                    sm={6}
+                    md={4}
+                  >
+                    <Book
+                      title={book.title}
+                      author={(book.author_name || []).join(", ")}
+                      cover={coverSrc || undefined}
+                      isbn={book.isbn?.[0]}
+                      children={
+                        <>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeBook(book, "didNotFinish")}
+                          >
+                            Remove
+                          </Button>
+                        </>
+                      }
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Container>
+        </div>
+      )}
     </div>
   );
 };
